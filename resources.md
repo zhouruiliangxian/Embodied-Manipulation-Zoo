@@ -12,3 +12,24 @@ Simulation for Deployments： https://x.com/_varunnair/status/210533726783762441
 https://github.com/unitreerobotics/unitree_sim_isaaclab/tree/main
 
 https://github.com/kabilankb/aspire-yam-gear-assembly/tree/main
+
+https://github.com/makermods-robotics/metal-arm-harness
+
+https://phonebot.dev/#hardware
+
+https://generalistai.com/blog
+
+https://github.com/ShawnJoeng/Text2Mujoco/tree/main
+
+https://github.com/robosimstudio/robosimstudio.git
+
+https://github.com/RoboticsCenter/rax.git
+
+https://github.com/mutms7/hardware-troubleshooter/
+
+https://docs.robotis.com/docs/systems/aiworker/resources/technical_story/codex/#41-tool-list
+
+https://lucyjcai.substack.com/p/you-might-not-need-a-vla-to-teach
+
+https://github.com/hao-ai-lab/ORA
+

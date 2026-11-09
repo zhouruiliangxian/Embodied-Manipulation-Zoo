@@ -33,3 +33,12 @@ https://lucyjcai.substack.com/p/you-might-not-need-a-vla-to-teach
 
 https://github.com/hao-ai-lab/ORA
 
+https://github.com/alison222c/astra6-arm-lab
+
+https://github.com/suniique/assembly-nist
+
+https://zero-real.github.io/
+
+https://github.com/KevinXu02/aha-3d
+
+https://github.com/hku-sail/Real2Sim_GPT6_ASTRA/tree/main

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASPIRE: Agentic Skills Discovery for Robotics — 论证结构精读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2038; --navy-2:#16304f; --paper:#faf7f0; --card:#ffffff;
+  --ink:#1c2430; --muted:#5b6879; --line:#d9d3c6;
+  --beige:#f0ece2;
+  --arg:#ffe58a; --concept:#ffc9c9; --data:#bfe0ff; --concede:#b8ecc7; --method:#dcc7ff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'IBM Plex Sans','Noto Sans SC',system-ui,sans-serif;
+  font-size:16px; line-height:1.6;
+}
+a{color:inherit}
+
+/* ---------- 1. top nav ---------- */
+header.top{
+  background:var(--navy); color:#eef3fa; padding:18px 28px 14px;
+  border-bottom:3px solid #0a1626;
+}
+header.top h1{
+  margin:0 0 4px; font-family:Lora,serif; font-weight:600; font-size:24px; letter-spacing:.2px;
+}
+header.top .sub{ font-size:13px; color:#a9bdd6; margin-bottom:12px }
+.legend{ display:flex; flex-wrap:wrap; gap:8px 14px; font-size:12px }
+.legend span{ display:inline-flex; align-items:center; gap:6px; color:#dbe6f4 }
+.legend i{ width:14px; height:14px; border-radius:3px; display:inline-block; border:1px solid rgba(0,0,0,.18) }
+
+/* ---------- 2. sticky chapter nav ---------- */
+nav.chapters{
+  position:sticky; top:0; z-index:50; background:var(--navy-2);
+  padding:9px 28px; display:flex; flex-wrap:wrap; gap:6px 8px;
+  box-shadow:0 2px 10px rgba(10,22,38,.25);
+}
+nav.chapters a{
+  font-size:12.5px; text-decoration:none; color:#cfe0f5;
+  padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+  white-space:nowrap;
+}
+nav.chapters a:hover{ background:rgba(255,255,255,.12); color:#fff }
+
+/* ---------- layout ---------- */
+main{ max-width:1460px; margin:0 auto; padding:30px 28px 60px }
+section.group{ margin-bottom:44px }
+h2.sect{
+  font-family:Lora,serif; font-size:21px; margin:0 0 6px; padding-bottom:8px;
+  border-bottom:2px solid var(--navy); color:var(--navy);
+}
+p.sect-zh{ margin:0 0 20px; font-size:13.5px; color:var(--muted) }
+
+.unit{
+  display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:26px;
+  align-items:start; padding:16px 0; border-bottom:1px dashed #e2dccf;
+}
+.unit:last-child{ border-bottom:none }
+.num{
+  display:inline-block; font-size:11px; font-weight:600; color:#fff;
+  background:var(--navy-2); border-radius:4px; padding:1px 7px; margin-right:8px; vertical-align:2px;
+}
+
+/* left column: english */
+.en{
+  font-family:Lora,serif; font-size:16.5px; line-height:1.78; margin:0;
+  background:var(--card); padding:14px 16px; border:1px solid #ece6da; border-radius:6px;
+}
+mark{ all:unset; padding:.5px 3px; border-radius:3px; line-height:1.5 }
+mark.arg{ background:var(--arg); box-shadow:inset 0 -1px 0 rgba(0,0,0,.12) }
+mark.concept{ background:var(--concept) }
+mark.data{ background:var(--data) }
+mark.concede{ background:var(--concede) }
+mark.method{ background:var(--method) }
+
+/* left column: chinese translation */
+.zh{
+  margin:10px 0 0; padding:12px 16px;
+  background:var(--beige); border-left:3px solid #b9ae95;
+  font-family:'Noto Serif SC','Songti SC',Lora,serif;
+  font-size:15px; line-height:1.85; color:#33302a;
+}
+.divider{ height:1px; background:#e6dfd0; margin:14px 0 0 }
+
+/* right column: annotation */
+.anno{
+  background:#fbfaf6; border:1px solid #e6e0d3; border-left:4px solid var(--navy-2);
+  border-radius:6px; padding:12px 14px; font-size:13.2px; line-height:1.65; color:#2a3340;
+}
+.anno h4{ margin:0 0 6px; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--navy) }
+.anno dl{ margin:0; }
+.anno dt{ font-weight:600; color:var(--navy-2); margin-top:8px; font-size:12.5px }
+.anno dd{ margin:2px 0 0 }
+.anno .tag{ display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px; background:#e9e4d7; color:#4b453a; margin-right:4px }
+.anno .weak{ border-left:3px solid #e0916b; background:#fff6f1; padding:7px 10px; margin-top:9px; border-radius:0 4px 4px 0 }
+
+/* figures / tables quoted from paper */
+.quote{
+  margin:14px 0 0; padding:11px 14px; background:#f3f6fa; border:1px solid #dde5ee;
+  border-radius:6px; font-size:13.5px; color:#31405a;
+}
+.quote b{ color:var(--navy) }
+table.res{ border-collapse:collapse; width:100%; font-size:13px; margin-top:6px; font-family:'IBM Plex Sans',sans-serif }
+table.res th,table.res td{ border:1px solid #d7dfeb; padding:5px 8px; text-align:center }
+table.res th{ background:#eaf0f7; color:var(--navy) }
+
+/* ---------- bottom overview ---------- */
+.overview{
+  margin-top:52px; background:var(--card); border:1px solid var(--line);
+  border-top:4px solid var(--navy); border-radius:8px; padding:26px 28px;
+}
+.overview h2{ font-family:Lora,serif; margin:0 0 16px; font-size:22px; color:var(--navy) }
+.chain{ display:flex; flex-wrap:wrap; gap:10px; align-items:stretch; margin-bottom:22px }
+.chain .node{
+  flex:1 1 150px; background:#f6f3ea; border:1px solid #e3dccc; border-radius:6px; padding:11px 13px;
+  font-size:13.4px;
+}
+.chain .node b{ display:block; font-size:12px; letter-spacing:.5px; text-transform:uppercase; margin-bottom:5px }
+.chain .arrow{ flex:0 0 auto; align-self:center; color:#98a3b3; font-size:18px }
+.n-q b{color:#7a5a00} .n-a b{color:#a13d3d} .n-e b{color:#2b6291} .n-r b{color:#2f7a4c} .n-c b{color:#6b3fa0}
+.claim{
+  background:#fff8dd; border:1px solid #edda92; border-left:5px solid #e9c33c;
+  padding:14px 16px; border-radius:0 6px 6px 0; font-size:15px; margin-bottom:22px;
+}
+.claim span{ display:block; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#8a6d1a; margin-bottom:6px }
+.best-worst{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
+.bw{ padding:14px 16px; border-radius:6px; font-size:13.8px; line-height:1.7 }
+.bw strong{ display:block; margin-bottom:6px; font-size:12px; letter-spacing:.5px; text-transform:uppercase }
+.bw.best{ background:#eef8f0; border:1px solid #bfe3ca } .bw.best strong{ color:#2f7a4c }
+.bw.worst{ background:#fdeeea; border:1px solid #f0c4b8 } .bw.worst strong{ color:#b4472c }
+
+footer{ text-align:center; color:var(--muted); font-size:12.5px; padding:26px 0 8px }
+
+@media (max-width:980px){
+  .unit{ grid-template-columns:minmax(0,1fr) }
+  .best-worst{ grid-template-columns:1fr }
+  main{ padding:22px 16px 40px }
+  header.top,nav.chapters{ padding-left:16px; padding-right:16px }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 1. TOP NAV ============ -->
+<header class="top">
+  <h1>ASPIRE: Agentic Skills Discovery for Robotics</h1>
+  <div class="sub">论证结构与逻辑层级精读 · CS 247 / Embodied AI 研讨课（VLM Agents 专题）｜Lu, Wu, Kou et al., NVIDIA / UMich / UIUC / UC Berkeley / CMU · arXiv:2607.00272 (2026-06-30)</div>
+  <div class="legend">
+    <span><i style="background:var(--arg)"></i>Yellow · 核心论点 / thesis</span>
+    <span><i style="background:var(--concept)"></i>Red · 关键概念 / terms</span>
+    <span><i style="background:var(--data)"></i>Blue · 实证证据 / data</span>
+    <span><i style="background:var(--concede)"></i>Green · 让步 / 反驳</span>
+    <span><i style="background:var(--method)"></i>Purple · 方法性说明</span>
+  </div>
+</header>
+
+<!-- ============ 2. CHAPTER NAV ============ -->
+<nav class="chapters">
+  <a href="#abstract">Abstract 摘要</a>
+  <a href="#intro">1 Introduction 引言</a>
+  <a href="#method">2 Method 方法总览</a>
+  <a href="#engine">2.1 Execution Engine</a>
+  <a href="#skills">2.2 Skill Library</a>
+  <a href="#evo">2.3 Evolutionary Search</a>
+  <a href="#setup">3.1–3.3 实验设置</a>
+  <a href="#results">3.4 Main Results</a>
+  <a href="#zeroshot">3.5 Zero-Shot</a>
+  <a href="#real">3.6 Real-Robot</a>
+  <a href="#ablation">3.7 Ablation</a>
+  <a href="#related">4 Related Work</a>
+  <a href="#limits">5 Limitations</a>
+  <a href="#conclusion">6 Conclusion</a>
+  <a href="#overview">↓ 论证结构总览</a>
+</nav>
+
+<main>
+
+<!-- ============ ABSTRACT ============ -->
+<section class="group" id="abstract">
+  <h2 class="sect">Abstract</h2>
+  <p class="sect-zh">摘要：全文论证的压缩版——问题陈述 → 系统主张 → 三组件机制 → 结果证据 → 泛化与迁移结论。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">A1</span>Traditional robot programming is <mark class="arg">notoriously challenging</mark>: it requires orchestrating <mark class="concept">multimodal perception</mark>, managing complex <mark class="concept">physical contact dynamics</mark>, and handling diverse environment configurations and <mark class="concept">execution failures</mark>.</p>
+      <div class="zh">传统机器人编程素有"难写"之名：它要求同时协调多模态感知、处理复杂的物理接触动力学，并应对多样化的环境配置与执行过程中的各类失效。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提出问题</span>以"公认难题"建立研究动机。</dd>
+        <dt>② 逻辑角色</dt><dd>论证链起点：先把领域难点自然列成三项清单，为后文三个组件一一对应埋下伏笔（感知/接触↔执行引擎，失效↔技能库与搜索）。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>诉诸共识（"notoriously"）而非量化困难，属低成本开场；清单式措辞未提供任何基准数据支撑"难"这一判断。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">A2</span>We introduce <mark class="concept">Aspire</mark> (<mark class="concept">Agentic Skill Programming through Iterative Robot Exploration</mark>), a <mark class="arg">continual learning system for robotics that autonomously writes and refines robot control programs</mark> in a <mark class="concept">code-as-policy</mark> paradigm while <mark class="arg">compounding experience into a reusable skill library</mark>.</p>
+      <div class="zh">我们提出 Aspire（"通过迭代式机器人探索实现智能体技能编程"）：这是一个面向机器人的持续学习系统，在"代码即策略"范式下自主编写并持续改进机器人控制程序，同时把经验不断累积进一个可复用的技能库。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">给出主张</span>提出中心论点与系统命名。</dd>
+        <dt>② 逻辑角色</dt><dd>论文的主张句（thesis）：两个并列承诺——"自主写程序"与"经验可累积"。后文 §2.1 兑现前者，§2.2 兑现后者。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>首字母缩略词先于机制出现，属于"命名造势"的修辞；"compounding"借复利隐喻暗示性能随经验单调上升，但这恰是需要 Fig.5(b) 才敢主张的经验性断言。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">A3</span>Aspire enables <mark class="arg">automated discovery of reusable skills that persist across multiple tasks, simulation and real-world settings, and different embodiments</mark>. Rather than relying on <mark class="concede">fixed, human-engineered pipelines</mark>, Aspire operates in an <mark class="concept">open-ended learning loop</mark>, consisting of three key components: <mark class="method">(1) a closed-loop robot execution engine that exposes fine-grained multimodal traces</mark> (e.g., perception overlays, grasp candidates, motion trajectories, and collision feedback), <mark class="method">enabling the agent to autonomously diagnose failures, synthesize repairs, and validate outcomes</mark>; <mark class="method">(2) a continually expanding skill library that distills validated fixes into reusable, transferable robotic knowledge</mark>; and <mark class="method">(3) an evolutionary search procedure that generates diverse task sequences and control programs</mark>, systematically debugging them to <mark class="arg">explore beyond single-trajectory refinement</mark>.</p>
+      <div class="zh">Aspire 能够自动发现可复用技能，并使这些技能跨任务、跨仿真与真实场景、跨不同本体持续留存。它不依赖固定的人工设计流水线，而是在一个开放式学习循环中运行，该循环包含三个关键组件：（1）闭环机器人执行引擎，暴露细粒度的多模态轨迹（如感知叠加图、抓取候选、运动轨迹与碰撞反馈），使智能体能够自主诊断失效、生成修复并验证结果；（2）持续扩张的技能库，把经过验证的修复蒸馏为可复用、可迁移的机器人知识；（3）进化式搜索流程，生成多样的任务序列与控制程序并系统性地调试，从而超越单条轨迹式的精炼。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">机制分解</span>+<span class="tag">对比定位</span></dd>
+        <dt>② 逻辑角色</dt><dd>把中心主张拆成三个可验证的工程承诺，构成本文的"论证骨架"：证据可得（引擎）→ 知识可存（技能库）→ 假设可广（进化搜索）。三者各自对应一处消融或迁移实验。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>"Rather than fixed, human-engineered pipelines" 是二选一式的定位修辞，把基线刻画为静态的；但 Aspire 自身仍依赖人工预定义的感知/规划/控制 API（见 §5 第三条局限），"open-ended"因此被显著稀释——这是全文最大的一处概念张力。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">A4</span>As Aspire encounters more tasks, its growing skill library enables <mark class="arg">increasingly rapid adaptation</mark>. Consequently, Aspire surpasses prior methods by <mark class="data">up to 77% on manipulation tasks under perturbation (LIBERO-Pro)</mark>, <mark class="data">72% on Robosuite's bimanual handover task</mark>, and <mark class="data">up to 32% on long-horizon household tasks (BEHAVIOR-1K)</mark>. The accumulated skill library further enables <mark class="arg">strong zero-shot generalization</mark>: on representative unseen long-horizon tasks (LIBERO-Pro Long), Aspire achieves <mark class="data">31% success</mark>, substantially outperforming the <mark class="data">4% success rate of prior methods</mark> despite their heavy reliance on <mark class="concede">test-time reasoning and retries</mark>. Finally, skills discovered in simulation provide <mark class="concede">initial evidence of sim-to-real transfer</mark>, substantially reducing real-robot programming effort despite different embodiments and robot APIs.</p>
+      <div class="zh">随着 Aspire 处理的任务增多，不断成长的技能库带来越来越快的适应能力。因此，Aspire 在受扰动的操作任务（LIBERO-Pro）上较此前方法最高提升 77%，在 Robosuite 双臂交接任务上提升 72%，在长时序家庭任务（BEHAVIOR-1K）上最高提升 32%。此外，累积的技能库支撑了强零样本泛化：在具有代表性的未见长时序任务（LIBERO-Pro Long）上，Aspire 取得 31% 的成功率，明显高于此前方法的 4%——尽管后者已高度依赖测试时推理与重试。最后，在仿真中发现的技能提供了仿真到真实迁移的初步证据：即便机器人与 API 不同，也能显著降低真机编程成本。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 4</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">证据陈列</span>摘要级结果汇总。</dd>
+        <dt>② 逻辑角色</dt><dd>结论段的三段式收束：性能（+77/72/32）→ 泛化（31% vs 4%）→ 迁移（sim-to-real），对应 §3.4 / §3.5 / §3.6，读者可逐条回查。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>注意措辞切换："up to 77%" 只取最优轴，"72% on bimanual handover" 是单任务；而绝对水平在长时序任务仅 31%，与前面近饱和的 LIBERO 数字形成落差。"initial evidence" 这一让步语同时把迁移结论限定为三技能、单平台的概念验证。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 1. INTRODUCTION ============ -->
+<section class="group" id="intro">
+  <h2 class="sect">1. Introduction</h2>
+  <p class="sect-zh">引言采用经典"缺口论证"：既有范式可用（P1）→ 缺口一：反馈太粗（P2–P3）→ 缺口二：经验不累积（P4）→ 人类工程师对照（P5）→ 提出方案（P6–P7）→ 结果预览（P8）。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.1</span>Recent progress in <mark class="concept">software engineering agents</mark> demonstrates that language models can autonomously inspect execution traces, localize failures, revise implementations, and improve through repeated interaction with execution environments. In robotics, this paradigm has inspired <mark class="concept">code-as-policy</mark> systems that compose perception modules, planning APIs, and control primitives into executable robot programs. Because robot behaviors are represented explicitly as programs, they can <mark class="arg">in principle be inspected, edited, debugged, and refined through interaction feedback</mark>.</p>
+      <div class="zh">软件工程智能体的近期进展表明，语言模型已能自主查看执行轨迹、定位故障、修改实现，并在与执行环境的反复交互中不断改进。在机器人领域，这一范式催生了"代码即策略"系统：把感知模块、规划接口与控制原语组合成可执行的机器人程序。由于机器人行为被显式表达为程序，原则上它们就可以被查看、编辑、调试，并借助交互反馈持续精化。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">建立共识</span>交代前提与可行性依据。</dd>
+        <dt>② 逻辑角色</dt><dd>论证的地基：把"程序可调试"这一软件工程的常识迁移到机器人，为整篇论文的类比（robot debugging ≈ software debugging）铺路。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>关键限定语"in principle"（原则上）暴露了论证缝隙：可调试性是表征性质，不等于自动化调试在实践中可行。作者紧接着在 P2 用"However"补上这一环，节奏上是自我设问自答。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.2</span><mark class="arg">However, existing robotic coding agents remain fundamentally limited by naive execution environments that provide only coarse task-level feedback.</mark> Debugging robot programs is intrinsically challenging because failures can arise from many interacting components, including multimodal perception, motion planning, grasp generation, contact dynamics, and long-horizon task coordination. A failed rollout may indicate that the task did not succeed, <mark class="concept">but not whether the root cause is incorrect perception, an unstable grasp, a planning error, or a downstream recovery failure</mark>. Without fine-grained diagnostic traces, agents have limited ability to determine what evidence to inspect, how to localize failures, or what repair strategy to attempt.</p>
+      <div class="zh">然而，现有的机器人编程智能体仍受制于简陋的执行环境——它们只提供粗粒度的任务级反馈。调试机器人程序之所以本质上困难，是因为故障可能源自多个相互耦合的环节，包括多模态感知、运动规划、抓取生成、接触动力学与长时序任务协调。一次失败的 rollout 只能说明任务没有成功，却不能说明根因究竟是感知错误、抓取不稳、规划失败还是下游恢复失效。缺乏细粒度诊断轨迹时，智能体既不知道该查看哪些证据，也不知道如何定位故障、该尝试哪种修复策略。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提出缺口一</span>核心论点句（黄）+ 因果解释。</dd>
+        <dt>② 逻辑角色</dt><dd>论证第一根支柱：<mark class="method" style="all:unset;border-bottom:2px solid #9c5ac4">反馈粒度不足 ⇒ 无法归因 ⇒ 无法修复</mark>。这一因果链直接推导出的设计要求就是 §2.1 的执行引擎，缺口与组件严格一一对应。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>排比式列举五类故障源，营造"耦合复杂"的印象，但没有任何失败分类统计支撑"many interacting components"的实际占比。此外"fundamentally limited"是强断言，需靠 §3.7 消融（无引擎 14% → 有引擎 62%）来兑现——作者确实把最强的证据放在了这里。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.3</span><mark class="arg">Moreover, existing systems do not accumulate experience across tasks.</mark> Once a task is completed, discovered fixes and recovery strategies are <mark class="concept">discarded rather than consolidated into reusable skills</mark>. As a result, <mark class="data">the agent solving its hundredth task is effectively no more experienced than the agent solving its first</mark>.</p>
+      <div class="zh">其次，现有系统不会跨任务积累经验。一个任务完成后，所发现的修复手段与恢复策略就被丢弃，而不是沉淀为可复用技能。结果是：解决第一百个任务的智能体，其经验水平实际上与解决第一个任务时毫无差别。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提出缺口二</span></dd>
+        <dt>② 逻辑角色</dt><dd>第二根支柱，也是标题"Skills Discovery"的落点：把贡献从"更强的调试器"升级为"会成长的系统"。对应 §2.2 技能库与 §3.5 零样本迁移。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>"第一百个任务 ≈ 第一个任务"是夸张式修辞（第 99 与第 1 之间的差别恰是 Aspire 的卖点），也隐含一个未证明的假设：调试经验确实可被抽象为跨任务可迁移的知识。这一假设的验证只覆盖 90→10 的任务集合迁移与 3 个真机技能，外推幅度远大于证据量。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.4</span><mark class="arg">Human robotics engineers take a fundamentally different approach.</mark> When a robot program fails, they replay executions, inspect perception outputs and motion trajectories, localize the failing subsystem, revise the implementation, and <mark class="concept">internalize reusable recovery strategies</mark>. Over time, debugging experience <mark class="concept">compounds into transferable knowledge</mark>, including grasp recovery heuristics, navigation strategies, prompting recipes, and procedural fixes that generalize across tasks. This accumulation of reusable knowledge is a key reason why human robot programmers become progressively more effective over time.</p>
+      <div class="zh">人类机器人工程师的做法根本不同。程序失败时，他们会回放执行过程、检查感知输出与运动轨迹、定位出故障的子系统、修改实现，并把可复用的恢复策略内化。久而久之，调试经验沉淀为可迁移的知识，包括抓取恢复启发式、导航策略、提示词配方以及跨任务通用的流程性修复。这种可复用知识的积累，正是人类机器人程序员越做越有效的关键原因。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 4</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">类比论证</span>提供设计蓝图。</dd>
+        <dt>② 逻辑角色</dt><dd>把前两段的不满转成正面规格：人类流程的四个动作（回放—定位—修改—内化）被逐字映射为系统的组件职责， Fig.2 的 radio 案例就是这条类比的具象化。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>论证结构是"设计哲学层面"的类比而非逻辑推导：人类工程师的有效性依赖于本文并未实现的通用能力（任务直觉、跨领域抽象、主动重看视频）。类比有说服力，但不构成"这三条组件即可复现人类增益"的证明；且隐含"人类知识天然是显式可表述的"这一前提。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.5</span>In this work, we introduce <mark class="concept">Aspire</mark>, a <mark class="arg">self-improving continual learning robotic system</mark> that autonomously writes and refines robot control programs in a code-as-policy paradigm while accumulating experience into a reusable skill library. Rather than operating within a fixed <mark class="concept">perception-plan-execute pipeline</mark>, Aspire runs in an <mark class="concept">open-ended learning loop</mark>, in which the agent <mark class="arg">self-determines how to inspect execution traces, diagnose failures, synthesize repairs, validate corrected behaviors, and consolidate successful recovery patterns into persistent skills that transfer across tasks</mark>.</p>
+      <div class="zh">本文提出 Aspire：一个可自我改进的持续学习机器人系统，它在"代码即策略"范式下自主编写并精化机器人控制程序，同时把经验累积为可复用的技能库。Aspire 不在固定的"感知—规划—执行"流水线中运行，而是运行于开放式学习循环：由智能体自行决定如何查看执行轨迹、诊断故障、生成修复、验证修正后的行为，并把成功的恢复模式固化为可跨任务迁移的持久技能。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 5</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提出方案</span>（与摘要 A2–A3 呼应）</dd>
+        <dt>② 逻辑角色</dt><dd>论证转折点：把"人类怎么做"（P4）改写为"系统怎么做"，五个自决定动词正好是 Fig.1 的循环箭头。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>与前文唯一的实质差异是"self-determines"（自主决定）。但流程本身（trace→diagnose→repair→validate→consolidate）是作者手工规定的，自主性只发生在每一步的具体选择上。若审稿人质疑"open-ended"名不副实，这一句正是防守薄弱点。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.6</span>An overview of Aspire is shown in Fig. 1. Aspire is built from three components. First, a <mark class="concept">closed-loop robot execution engine</mark> replaces coarse rollout-level feedback with <mark class="concept">per-primitive execution traces</mark>. For each perception, planning, grasping, and control call, the execution engine records the observations, inputs, outputs, and visual evidence if possible. These rich multimodal traces allow the agent to selectively inspect salient primitive logs, progressively localize failures, and validate repairs through re-execution. Second, Aspire maintains a growing <mark class="concept">skill library</mark> that distills validated fixes into reusable, transferable robotic knowledge retrievable as <mark class="concept">in-context guidance</mark> for future tasks. Third, Aspire employs an <mark class="concept">evolutionary search</mark> procedure that generates diverse task sequences and control programs, exploring beyond single-trajectory self-improvement through iterative debugging and parallel refinement. Together, these components establish a self-improving robotic system whose <mark class="arg">performance scales with experience</mark>: the more tasks Aspire sees, the larger its skill library grows, and the more it transfers to novel tasks, longer-horizon behaviors, and real-world robotic settings where similar failure-recovery patterns emerge under different embodiments.</p>
+      <div class="zh">Aspire 的总览见 Fig.1，由三个组件构成。其一，闭环机器人执行引擎以"逐原语执行轨迹"取代粗糙的 rollout 级反馈：每次感知、规划、抓取与控制调用都会记录观测、输入、输出，并在可能时记录视觉证据；这些多模态轨迹使智能体能有针对性地查看关键原语日志、渐进定位故障，并通过重新执行验证修复。其二，Aspire 维护一个持续成长的技能库，将验证过的修复蒸馏为可复用、可迁移的知识，并作为未来任务的上下文提示供检索。其三，Aspire 采用进化式搜索，生成多样的任务序列与控制程序，通过迭代调试与并行精化超越单轨迹的自我改进。三者共同构成一个性能随经验扩展的自我改进系统：Aspire 见过的任务越多，技能库越大，就越能迁移到新任务、更长时序的行为，以及那些在不同本体下重现相似"失效—恢复"模式的真实场景。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 6</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">系统概述</span>+<span class="tag">提出可检验预测</span></dd>
+        <dt>② 逻辑角色</dt><dd>末句"performance scales with experience"是全文唯一可被直接证伪的经验性规律，作者随即将其操作化为 §3.5 的 N∈{0,25,50,90} 技能库规模扫描——这是本文论证设计最干净的一处。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>三组件在此并列，但 §3.7 消融只测了引擎与进化搜索，技能库对主结果的独立贡献未被单独消融（仅由零样本实验间接支撑），主张与证据存在一处缺口。"if possible"（尽可能记录视觉证据）也透露引擎的轨迹质量并不保证。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">1.7</span>Empirically, Aspire demonstrates strong self-improvement across diverse short- and long-horizon robot benchmarks. Against prior coding agents, Aspire improves success rate by <mark class="data">up to 77 points on LIBERO-Pro perturbation suites</mark>, <mark class="data">up to 72 points on Robosuite contact-rich manipulation tasks</mark>, and <mark class="data">up to 32 points on BEHAVIOR-1K long-horizon household tasks</mark> with procedurally generated layouts. Based on the skill library accumulated on LIBERO-90, Aspire transfers zero-shot to LIBERO-Pro Long, and reaches <mark class="data">31% success, while prior methods saturate at 4%</mark> despite their reliance on test-time reasoning and retries. We further evaluate <mark class="data">three simulation-discovered skills on a real bimanual robot</mark>, showing that retrieving skills discovered in sim as in-context guidance <mark class="data">reduces real-world reasoning tokens</mark> and enables successful programs where naive debugging without skill transfer <mark class="concede">fails entirely</mark>.</p>
+      <div class="zh">实证上，Aspire 在多种短时与长时序机器人基准上都表现出显著的自我改进。相比此前的编程智能体，Aspire 在 LIBERO-Pro 扰动套件上成功率最高提升 77 个百分点，在 Robosuite 强接触操作任务上最高提升 72 个百分点，在布局程序化生成的 BEHAVIOR-1K 长时序家庭任务上最高提升 32 个百分点。基于在 LIBERO-90 上累积的技能库，Aspire 零样本迁移到 LIBERO-Pro Long 并达到 31% 成功率，而此前方法即使依赖测试时推理与重试仍停在 4%。我们进一步在真实双臂机器人上评估三个由仿真发现的技能，结果表明把仿真中发现的技能作为上下文提示检索使用，可减少真机推理 token 消耗，并使程序成功运行——而不做技能迁移的朴素调试则完全失败。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 7</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">证据预告</span></dd>
+        <dt>② 逻辑角色</dt><dd>把四类证据按"主结果 / 泛化 / 迁移"三档摆出，与 §3.4、§3.5、§3.6 的顺序一致，方便读者核对。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>百分点（points）与百分比（%）在摘要与正文间被混用（摘要写"77%"，此处写"77 points"），严格而言是不同的量纲；"fails entirely"仅基于抽屉一个任务、20 次试验的单次对照（§3.6：0/20 → 11/20），样本量很小。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 2. METHOD OVERVIEW ============ -->
+<section class="group" id="method">
+  <h2 class="sect">2. Method（总览）</h2>
+  <p class="sect-zh">方法开篇先复述三组件及其与论证目标的对应关系，再交代 coordinator–actor 架构与"上下文卫生"这一工程性理由。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">2.1</span>Aspire consists of three components that together form an open-ended learning loop: <mark class="method">(1) a robot execution engine (§2.1) that exposes per-primitive multimodal traces for failure attribution and executes agent-written repairs for closed-loop validation</mark>; <mark class="method">(2) a skill library (§2.2) that accumulates validated repairs as reusable skills</mark>; and <mark class="method">(3) an evolutionary search procedure (§2.3) that broadens exploration beyond single-trajectory repair</mark>. As Aspire encounters more tasks, its skill library grows, allowing <mark class="arg">future tasks to inherit accumulated repairs and reusable strategies</mark>.</p>
+      <div class="zh">Aspire 由三个组件构成，它们共同形成一个开放式学习循环：（1）机器人执行引擎（§2.1），暴露逐原语多模态轨迹以完成故障归因，并执行由智能体书写的修复以形成闭环验证；（2）技能库（§2.2），把经过验证的修复累积为可复用技能；（3）进化式搜索（§2.3），把探索范围拓展到单轨迹修复之外。随着 Aspire 遇到的任务增多，技能库随之增长，使后续任务得以继承已累积的修复与可复用策略。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">路线图</span></dd>
+        <dt>② 逻辑角色</dt><dd>方法章节的目录句；组件顺序即证据顺序（引擎→§3.7 消融；技能库→§3.5；搜索→§3.7）。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>措辞上"inherit"（继承）把技能库写成先验传递机制，但继承的质量取决于检索与准入标准，而这两者在方法部分只给了原则、没给算法（细节推给附录 E.1）。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">2.2</span>As shown in Fig. 1, Aspire adopts a <mark class="concept">coordinator–actor architecture</mark>. A central coordinator manages the shared skill library and dispatches actor coding agents to individual tasks, while each actor writes, executes, diagnoses, and repairs robot programs within the robot execution engine. <mark class="method">Actors do not exchange full chat histories or raw rollout trajectories.</mark> Instead, transferable experience is distilled into the skill library, allowing each actor's context window to remain focused on the task specification, current program, and structured execution traces associated with the current failure.</p>
+      <div class="zh">如 Fig.1 所示，Aspire 采用"协调者—执行者"架构：中央协调者管理共享技能库，并把各个执行者（编程智能体）分派到具体任务；每个执行者在机器人执行引擎内编写、运行、诊断并修复程序。执行者之间不交换完整对话历史或原始 rollout 轨迹，可迁移的经验而是被蒸馏进技能库，从而让每个执行者的上下文窗口始终聚焦于任务说明、当前程序，以及与当前故障相关的结构化执行轨迹。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">架构说明</span>（方法性）</dd>
+        <dt>② 逻辑角色</dt><dd>为并行性与"经验必须显式化"提供结构理由：信息只在技能库中流通，所以跨任务学习只能以可写文本的形式发生——这是一个刻意的设计约束。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>该设计同时是"知识只以自然语言存在"这一局限的成因：无法传递只能通过执行才能体现的隐性技能。论文没有讨论蒸馏造成的信息损失，也没有测量"协调者准入"这一单点瓶颈（准入错误会污染全库）。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 2.1 ENGINE ============ -->
+<section class="group" id="engine">
+  <h2 class="sect">2.1. Robot Execution Engine</h2>
+  <p class="sect-zh">对应引言缺口一。论证结构：既有反馈的两难（P1）→ 本文设计（P2）→ 具体案例（P3–P4），案例同时充当机制说明与有效性证据。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">E1</span>Embodied coding agents need execution evidence to debug robot programs. Prior methods expose this evidence through <mark class="concept">fixed, human-designed interfaces</mark>, typically as manually curated scene-level summaries or a set of pre-defined observations. This creates a <mark class="concept">trade-off</mark>: <mark class="arg">too little evidence can hide the failing primitive, while too much raw visual context can distract the agent from the causal chain that produced the failure</mark>.</p>
+      <div class="zh">具身编程智能体需要执行证据才能调试机器人程序。既有方法通过固定、人工设计的接口暴露这些证据，通常是手工整理的场景级摘要或一组预定义观测。这带来一个两难：证据太少会掩盖真正出错的原语，而原始视觉上下文太多又会分散智能体注意力，使其偏离导致失败的那条因果链。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">构造两难</span>（设计论证的标准手法）</dd>
+        <dt>② 逻辑角色</dt><dd>以"信息量—注意力"的权衡逼出中间道路：逐原语 + 关键帧 + 结构化返回，正是这条中间道路的具体形态。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>两难的两侧都是断言而非测量："too much raw visual context can distract"未给出任何对照实验（例如全视频输入 vs 关键帧输入）。这一权衡是本文设计合理性的关键前提，却完全依赖直觉。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">E2</span><mark class="arg">Aspire turns this fixed feedback channel into an open-ended debugging environment.</mark> The robot execution engine records per-primitive multimodal traces for perception, planning, and control calls, exposes the trace to the coding agent, and executes agent-written repairs for closed-loop validation. <mark class="method">For each primitive call, the trace stores the invoked API, inputs and outputs, return status, and relevant multimodal evidence such as RGB keyframes, overlays, grasp candidates, object poses, and motion-planning results.</mark> <mark class="method">The agent does not receive full video frames; the engine keeps frames immediately before and after each primitive call together with the corresponding overlays and return values</mark>, so the agent can focus on evidence around calls implicated by the failure.</p>
+      <div class="zh">Aspire 把这条固定的反馈通道改造成一个开放式调试环境。执行引擎为感知、规划与控制调用记录逐原语的多模态轨迹，把轨迹暴露给编程智能体，并执行智能体写出的修复以实现闭环验证。对每次原语调用，轨迹记录被调用的 API、输入与输出、返回状态，以及相关多模态证据（RGB 关键帧、叠加图、抓取候选、物体位姿与运动规划结果）。智能体并不接收完整视频帧；引擎只保留每次原语调用前后紧邻的帧，连同对应的叠加图与返回值，从而让智能体聚焦于与失败相关的调用附近的证据。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提供机制</span>（方法性说明密度最高的一段）</dd>
+        <dt>② 逻辑角色</dt><dd>两难的解法落地为可实现的记录协议；"不接收完整视频"是对上一条论证的显式回应，形成问题—设计的闭环。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>解法依赖一个未论证的假设：故障的因果证据总能被"紧邻调用的前后帧"捕获。对时序耦合的失效（如累积误差、迟滞的接触状态），局部关键帧可能恰好切断因果链，而论文未讨论这类失败模式。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">E3</span>Fig. 2 zooms in on one BEHAVIOR-1K navigate-and-pick-up-radio debugging episode. <mark class="data">The ego-view keyframes show that the robot finds the radio, repeatedly fails to approach it, and then succeeds after changing its approach direction.</mark> <mark class="data">The primitive trace localizes the failure: perception succeeds and returns a radio pose, but repeated navigate_to_pose calls return PLANNING_ERROR.</mark> By checking the navigation return values and associated logs, the agent finds that the generated navigation target lies too close to the table boundary, <mark class="data">approximately within 20 centimeters of the table edge</mark>. This triggers collision avoidance and causes the planner to fail. Thus, <mark class="arg">the failure is not due to detecting or grasping the radio, but rather to the infeasibility of the target pose under the table's collision constraints</mark>.</p>
+      <div class="zh">Fig.2 放大了 BEHAVIOR-1K 中"导航并拿起收音机"任务的一次调试过程。第一视角关键帧显示：机器人找到了收音机，却反复无法靠近，直到改变接近方向后才成功。原语轨迹把故障定位出来——感知成功并返回了收音机位姿，但多次 navigate_to_pose 调用都返回 PLANNING_ERROR。通过检查导航返回值与相关日志，智能体发现生成的导航目标离桌子边界太近，大约在桌沿 20 厘米以内，这触发了碰撞避让并导致规划失败。因此，失败并非源于未能识别或未能抓取收音机，而是目标位姿在桌子的碰撞约束下根本不可达。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">案例证据</span>（anecdote as evidence）</dd>
+        <dt>② 逻辑角色</dt><dd>执行全文最关键的一步推理：<mark class="method" style="all:unset;border-bottom:2px solid #9c5ac4">归因 ≠ 结果</mark>。任务失败但感知成功——只有逐原语轨迹才能区分二者，因此粒度是必要而非充分的。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>单个、精心挑选的成功案例在逻辑上只能证明"可能"，不能证明"普遍"。它的修辞作用（让读者亲眼看到归因过程）强于证明力；真正的量化支撑被推迟到 §3.7 消融。同时该案例的因果解释（20 厘米缓冲）是智能体自己读日志得出的，论文未独立验证这一诊断是否为真。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">E4</span><mark class="arg">The repair follows directly from this diagnosis.</mark> Rather than changing the perception prompt or grasp primitive, <mark class="method">the agent writes a multi-angle approach routine that samples alternative navigation targets around the radio and executes an approach direction that clears the collision buffer.</mark> The execution engine exposes the evidence, validates the patched program, and enables the agent to analyze the resulting logs, form a hypothesis, and make a targeted repair decision.</p>
+      <div class="zh">修复方案由诊断直接推出。智能体没有去改感知提示词或抓取原语，而是写出一段"多角度接近"流程：在收音机周围采样若干备选导航目标，并选择一个能避开碰撞缓冲区的接近方向执行。执行引擎暴露证据、验证打过补丁的程序，并使智能体能够分析 resulting 日志、形成假设、做出有针对性的修复决策。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 4</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">收尾案例</span>并衔接技能库</dd>
+        <dt>② 逻辑角色</dt><dd>演示"诊断→最小修复→验证"三步闭环，并把该修复抽象为 Fig.3 中的 Multi-Angle Approach 技能条目，完成从个案到知识的过渡。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>"follows directly"淡化了搜索空间：在感知提示、抓取参数、导航目标等多条修复路径中挑对一条，本身就是需要归因能力的难题，而这正是论文声称解决的东西——此处近乎循环论证（用归因能力解释归因能力）。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 2.2 SKILL LIBRARY ============ -->
+<section class="group" id="skills">
+  <h2 class="sect">2.2. Skill Library</h2>
+  <p class="sect-zh">对应引言缺口二。论证要点：技能从"验证过的修复"归纳而来，形态是紧凑的上下文提示，准入由协调者审计。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">S1</span><mark class="arg">Program failures recur across tasks, but the reusable knowledge is rarely an entire task program.</mark> Aspire's skill library stores <mark class="concept">heterogeneous repair knowledge</mark>: localization heuristics, perception prompts, grasping constraints, navigation recovery strategies, motion primitives, scene-understanding routines, and debugging workflows. <mark class="method">We do not prescribe this taxonomy in advance. Skills are induced from validated repairs</mark>: the coding agent diagnoses a failure from execution traces, patches the program, validates the fix on debugging configurations, and <mark class="method">the coordinator admits only reusable patterns into the shared library</mark>.</p>
+      <div class="zh">程序故障在不同任务间反复出现，但可复用的知识很少是整段任务程序。Aspire 的技能库存储的是异构的修复知识：定位启发式、感知提示词、抓取约束、导航恢复策略、运动原语、场景理解流程与调试工作流。我们并不预先规定这一分类体系：技能是从经过验证的修复中归纳出来的——编程智能体依据执行轨迹诊断故障、给程序打补丁、在调试配置上验证修复，协调者则只把可复用的模式纳入共享库。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">定义知识粒度</span>（核心概念界定）</dd>
+        <dt>② 逻辑角色</dt><dd>第一句是技能库存在的理由：故障重复、程序不重复 ⇒ 复用单位必须是"修复片段"而非"整程序"。这是从经验观察推出的设计结论。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>"Program failures recur across tasks"是全文最承重却最少验证的假设之一：论文没有统计跨任务故障模式的重现率，仅在 §3.5 用零样本提升间接回应。"不预设分类"（不 prescribe taxonomy）同时是一种优点（开放）与一种风险（无法保证覆盖与去重），后者在 §5 第四条局限被承认。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">S2</span><mark class="method">Each skill is stored as compact in-context guidance, including the failure signature, when-to-apply condition, repair strategy, and, when useful, a representative code sketch.</mark> Fig. 3 shows representative entries and the resulting library breadth. For the radio task in Fig. 2, the admitted skill is <mark class="concept">a navigation recovery pattern rather than a complete radio-pickup program</mark>: when planner errors recur near an obstacle boundary because sampled target poses fall inside the collision buffer, sample alternative approach directions around the object before retrying perception and grasping. <mark class="arg">This representation lets future actors reuse validated repairs instead of rediscovering them through test-time reasoning</mark>, supports zero-shot transfer to harder simulated tasks, and provides the mechanism for selected simulation-discovered skills to generalize across embodiments and transfer to real robots.</p>
+      <div class="zh">每条技能都以紧凑的上下文提示形式存储，包含故障特征、适用条件、修复策略，以及（如有助益）一段代表性代码草图。Fig.3 展示了代表性条目与由此形成的库的广度。对 Fig.2 的收音机任务，入库的是一条"导航恢复模式"而非完整的取物程序：当因所选目标位姿落入碰撞缓冲区而在障碍边界附近反复出现规划错误时，先在物体周围采样其他接近方向，再重试感知与抓取。这种表示让后续执行者能够直接复用已验证的修复，而不必在测试时推理中重新发现它们；它支撑了向更难仿真任务的零样本迁移，并为部分仿真发现的技能跨本体泛化、迁移到真实机器人提供了机制。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">表示设计</span>+<span class="tag">外推主张</span></dd>
+        <dt>② 逻辑角色</dt><dd>给出"技能=条件化规则"的表示，其可迁移性由此形式化：when-to-apply 条件是跨任务的接口，因而同一技能可被 sim 与真机共享。三个收益（复用/零样本/迁移）分别由 §3.7、§3.5、§3.6 承接。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>一句话内并列三种层级的结论（已在 sim 验证 / 已在真机初步验证 / 只是机制上可能），读者容易把三者当作同等成熟。此外"compact"与"when useful"意味着技能质量依赖智能体的自述能力，全文未评估技能文本本身的正确率或误导率。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">S3</span><mark class="method">Actors report structured findings that summarize the failure mode, validated fix, and potentially transferable repair pattern. The coordinator audits these findings, verifies compliance with the allowed API policy, and promotes only reusable repairs that have passed debug validation into the shared skill library.</mark> Appendix E.1 provides the prompts used for actor reporting and coordinator-guided skill admission.</p>
+      <div class="zh">执行者提交结构化的 findings 报告，概括故障模式、已验证的修复以及可能可迁移的修复模式。协调者审计这些报告，核查其是否符合允许 API 的策略约束，并只把已通过调试验证的可复用修复晋升进共享技能库。Actor 汇报与协调者准入流程所使用的提示词见附录 E.1。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">治理流程</span>（方法性）</dd>
+        <dt>② 逻辑角色</dt><dd>回答"错误技能如何被挡住"这一必问的质疑：审计 + API 合规 + 调试通过三道闸门，是库可信度的制度保证。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>审计者本身也是同一个 LLM，准入判断没有独立 oracle，"验证过的修复"其可靠性因此是被智能体自身定义。论文未报告误入率、库中冗余条目比例，也未做"随机准入 vs 审计准入"的对照，这是机制描述里证据最稀薄的一段。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 2.3 EVOLUTIONARY SEARCH ============ -->
+<section class="group" id="evo">
+  <h2 class="sect">2.3. Evolutionary Search</h2>
+  <p class="sect-zh">第三组件的论证走"自我批评→补丁"路线：先承认前两组件会陷入局部修复，再引入群体搜索。这是全文最自觉的一处让步式推进。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">V1</span><mark class="concede">Trace-guided debugging alone can collapse into local repair loops, where the agent repeatedly patches the same failed strategy instead of exploring fundamentally different ways to solve the task.</mark> Aspire uses <mark class="concept">evolutionary search</mark> to broaden exploration of executable robot programs, encouraging diverse repair hypotheses and task strategies.</p>
+      <div class="zh">仅靠轨迹引导的调试容易坍缩为局部修复循环：智能体反复在同一条失败策略上打补丁，而不去探索根本不同的解题方式。为此 Aspire 引入进化式搜索，拓宽对可执行机器人程序的探索，鼓励多样化的修复假设与任务策略。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步 + 引出组件</span></dd>
+        <dt>② 逻辑角色</dt><dd>论证的自我修补环节：把 §2.1 的局限说清，才使第三组件成为"必需"而非"锦上添花"，从而让三组件结构显得不可减省。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>让步是策略性的（先自曝弱点再解决），说服力强；但"collapse into local repair loops"同样只是断言，缺少对局部循环发生频率的测量。§3.7 显示进化搜索仅带来 62%→72% 的增量，明显小于引擎的 14%→62%，暗示这一诊断虽真实但影响面较小。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">V2</span><mark class="method">In each round, based on the skill library, the coding agent proposes a population of K candidate programs conditioned on the top-performing previous programs and failure traces from previous evaluations. Each candidate is executed in the robot execution engine, producing task outcomes together with new diagnostic traces. The next round is then conditioned on the best-performing programs together with their remaining failure modes</mark>, allowing the search to explore distinct strategies rather than repeatedly refining the same solution.</p>
+      <div class="zh">每一轮中，编程智能体基于技能库、以往表现最好的程序以及上一轮评估留下的失败轨迹，提出 K 个候选程序构成的种群。每个候选都在机器人执行引擎中运行，产出任务结果与新的诊断轨迹。下一轮则以表现最佳的程序及其残余失败模式为条件继续生成，从而让搜索探索彼此不同的策略，而不是反复打磨同一个解。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">算法说明</span></dd>
+        <dt>② 逻辑角色</dt><dd>把"多样性"落实为选择机制：条件输入是"最佳程序 + 残余失败"，因此下一代必然偏离已解决部分——多样性来自表征而非随机采样。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>严格说这不是进化搜索（无交叉、无变异算子、精英规模为 Top3），更接近"带记忆的迭代束搜索"。命名借用了进化算法的正当前提，却未继承其理论保证，可能招致术语上的质疑。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">V3</span><mark class="arg">The search target is the robot program itself.</mark> <mark class="method">Candidates are selected through closed-loop execution, and validated repairs are admitted into the skill library after search concludes, provided they generalize across environment variations and tasks.</mark> Search terminates when a candidate solves the debugging configurations or when the search budget is exhausted. Algorithm 1 summarizes the evolutionary search procedure. See Appendix E.4 for pipeline details.</p>
+      <div class="zh">搜索的对象就是机器人程序本身。候选通过闭环执行来筛选；搜索结束后，其中的已验证修复会被纳入技能库，前提是它们能跨环境变化与任务泛化。当某个候选解出全部调试配置、或搜索预算耗尽时，搜索终止。进化搜索流程见 Algorithm 1，管线细节见附录 E.4。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">界定搜索空间</span>+<span class="tag">交接条件</span></dd>
+        <dt>② 逻辑角色</dt><dd>"search target is the program itself"把本方法与 VLA 微调区分开（优化对象是符号程序而非参数），是与 §4 相关工作对照的定位锚点。准入延后到搜索结束、且要求跨环境泛化，防止单种子过拟合入库。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>"provided they generalize across environment variations and tasks"的判据未被定义——用什么阈值、多少个种子、由谁裁定泛化成功，正文缺失（推给附录 E.1/E.4）。若这一判据宽松，则 §3.5 中库规模带来的非单调波动就有了成因，而这正是作者在 §5 承认的现象。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3.1-3.3 SETUP ============ -->
+<section class="group" id="setup">
+  <h2 class="sect">3. Experiments · 3.1 Setup / 3.2 Benchmarks &amp; Baselines / 3.3 Protocol</h2>
+  <p class="sect-zh">实验开篇不谈结果，而是先立"公平比较"的制度：固定 agent/环境/API、明确基线类型、以及训练—评测种子不相交。这三段是为 §3.4–3.7 的证据做可信度担保。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">3.1</span><mark class="method">For all the simulation benchmarks, we use Claude Code with Claude Opus 4.6 and a 1M-token context window as the coding agent.</mark> The agent writes executable Python robot programs in <mark class="concept">CaP-X</mark>, an open-source code-as-policy framework built on MuJoCo Playground, with robot programming APIs for perception, geometry, and motion planning. <mark class="arg">The agent, environment, and API set are fixed across all experiments.</mark></p>
+      <div class="zh">在所有仿真基准上，我们都使用 Claude Code（Claude Opus 4.6，100 万 token 上下文窗口）作为编程智能体。智能体在 CaP-X 中编写可执行的 Python 机器人程序——这是一个基于 MuJoCo Playground 的开源"代码即策略"框架，提供感知、几何与运动规划的机器人编程 API。智能体、环境与 API 集合在所有实验中保持一致。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">控制变量声明</span></dd>
+        <dt>② 逻辑角色</dt><dd>"固定 agent/环境/API"是把增益归因于框架（而非模型升级）的必要条件，与 §3.7 消融共同构成效力归因的两块基石。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>反向问题：底层模型能力本身极强，因此"框架贡献"与"前沿模型贡献"仍不可分——缺少同一框架下换用弱模型的实验，这在 §5 第二条局限中被承认。另外基座框架 CaP-X 与基线 CaP-Agent0 同源（同为 Fu et al., 2026），使比较更像"同一体系内的增量"而非独立对照。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">3.2</span><mark class="method">For the real-robot skill transfer study (§3.6), we use OpenAI Codex GPT-5.5 in reasoning-xhigh mode on a bimanual YAM manipulation station.</mark> We select <mark class="data">three skills compiled by Aspire in Franka-based simulation: soda-can pickup, bowl-on-plate placement, and drawer push/pull</mark>. We provide these as in-context guidance to the real-robot coding agent. <mark class="concede">The real-robot setting uses a different embodiment and API from simulation</mark>, but exposes Aspire multimodal execution traces so the agent can autonomously run, inspect, and debug programs without task-specific human guidance during the debugging loop. <mark class="method">We compare runs with and without the corresponding simulation-discovered skill, measuring tokens to first success and held-out real-robot success rate.</mark></p>
+      <div class="zh">在真机技能迁移研究（§3.6）中，我们使用 OpenAI Codex GPT-5.5（reasoning-xhigh 模式），平台为双臂 YAM 操作工位。我们挑选 Aspire 在基于 Franka 的仿真中编译出的三个技能：易拉罐拾取、碗上盘放置、抽屉推/拉，并将其作为上下文提示提供给真机编程智能体。真机环境与仿真使用不同的本体与 API，但同样暴露 Aspire 的多模态执行轨迹，使智能体可以在调试循环中自主运行、查看与调试程序，而无需针对任务的人工指导。我们对比"有无对应仿真发现技能"的运行，度量指标为首次成功所消耗的 token 数以及留出集上的真机成功率。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">迁移实验设计</span></dd>
+        <dt>② 逻辑角色</dt><dd>为最激进的主张（跨本体迁移）预先限定测量方式：比的是"调试成本"与"成功率"，而不是策略直接部署——这句话是 §3.6 结论强度的天花板。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>三技能、单平台、每条件 20 次试验，且真机侧换了基座模型（Opus→GPT-5.5），基线也不再是 CaP-Agent0。样本极小且变量漂移，使该段成为全文证据/主张比最低的部分。"without task-specific human guidance"这一说法也需读者信任其标注口径。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">3.3</span>We evaluate Aspire on three benchmark families: <mark class="concept">LIBERO-Pro</mark> for short-horizon robustness under object, goal, and spatial perturbations; <mark class="concept">Robosuite</mark> for contact-rich single- and dual-arm manipulation; and <mark class="concept">BEHAVIOR-1K</mark> for long-horizon household mobile manipulation on navigate-and-pick-up-soda-can and navigate-and-pick-up-radio. Our primary coding-agent baseline is <mark class="concept">CaP-Agent0</mark>, which uses visual differencing, a predefined skill library, and per-episode test-time retries. We also compare with end-to-end VLA policies, including <mark class="concept">OpenVLA, π0, and π0.5</mark>. For zero-shot transfer, we evaluate held-out <mark class="concept">LIBERO-Pro Long</mark> tasks using the skill library accumulated on <mark class="concept">LIBERO-90</mark>.</p>
+      <div class="zh">我们在三个基准族上评估 Aspire：LIBERO-Pro 考察物体、目标与空间扰动下的短时序鲁棒性；Robosuite 考察强接触的单体与双臂操作；BEHAVIOR-1K 考察长时序家庭移动操作（导航拾取易拉罐、导航拾取收音机）。主要的编程智能体基线是 CaP-Agent0，它使用视觉差分、一个人工预定义技能库以及逐 episode 的测试时重试。我们同时与端到端 VLA 策略比较，包括 OpenVLA、π0 与 π0.5。零样本迁移部分则在 LIBERO-90 上累积技能库，并在留出的 LIBERO-Pro Long 任务上评估。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">覆盖面设计</span></dd>
+        <dt>② 逻辑角色</dt><dd>基准选择服务于主张分层：短时→长时序→移动操作→真机，难度阶梯与 §1.6 "transfer to novel tasks, longer-horizon behaviors, real-world settings" 逐项对齐。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>对 CaP-Agent0 的刻画（"predefined skill library"、"test-time retries"）为其后的强对比预置了靶子；但 VLA 基线属于"未针对扰动专门训练"的对照，与代码即策略并非同类方案，跨范式比较的提升幅度（如 +77）易被误读为同类竞争。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">3.4</span><mark class="arg">Across all benchmarks, an environment seed fixes each task instance, including object poses, distractors, and initial robot/object states.</mark> <mark class="method">We use disjoint debug and evaluation seeds: Aspire learns on a small debug split, then reports success on larger held-out evaluation seeds with one generated program per LIBERO-Pro/Robosuite task, while CaP-Agent0 regenerates a separate program for each seed with test-time reasoning and retries.</mark> For BEHAVIOR-1K evaluation, Aspire uses <mark class="concept">incremental block execution</mark>, generating each next code block from the current multimodal trace.</p>
+      <div class="zh">在所有基准中，环境种子固定了每个任务实例，包括物体位姿、干扰物以及机器人与物体的初始状态。我们使用互不相交的调试种子与评测种子：Aspire 在较小的调试集上学习，随后在更大的留出评测种子上报告成功率，且每个 LIBERO-Pro/Robosuite 任务只使用一个生成的程序；而 CaP-Agent0 会为每个种子重新生成一个独立程序，并伴随测试时推理与重试。在 BEHAVIOR-1K 评测中，Aspire 采用增量式分块执行，依据当前多模态轨迹生成下一个代码块。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 4</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">协议定义</span>——本段是全文方法学上最关键的一段</dd>
+        <dt>② 逻辑角色</dt><dd>确立"一程序多种子"这一严格评测口径：Aspire 的产物必须预先鲁棒，不能靠测试时重试补救；这使其数字相对基线更保守，也是对"过拟合调试种子"质疑的正面回应。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>该口径其实对 Aspire 更苛刻（基线可按种子重试），因此大幅领先更可信。但 BEHAVIOR-1K 上的"incremental block execution"允许按当前轨迹再生成后续代码块，属于运行时自适应，与 LIBERO 的"一个程序"口径并不一致，跨基准的比较尺度需注意统一性问题。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3.4 MAIN RESULTS ============ -->
+<section class="group" id="results">
+  <h2 class="sect">3.4. Main Evaluation Results</h2>
+  <p class="sect-zh">主结果段是"证据—主张"的核心对接口：每个数字都指向 §2 的某一组件承诺。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">R1</span>Figure 4 summarizes the main evaluation. <mark class="method">"Human" means the programs are written by human experts.</mark> On LIBERO-Pro, Aspire improves over all the baselines on all three suites: averaging the Pos and Task perturbation axes, Aspire gains <mark class="data">77% on Object, 41.5% on Goal, and 42.5% on Spatial over the strongest baseline in each suite</mark>. <mark class="concede">π0.5 is stronger than OpenVLA and π0 on some position perturbations, but remains far below Aspire and largely collapses under task paraphrases.</mark> On Robosuite, Aspire preserves near-saturated performance on easier contact-rich tasks and substantially improves bimanual handover, from <mark class="data">20% to 92%</mark>. On BEHAVIOR-1K, Aspire outperforms both human and CaP-Agent0 on navigation and task success, with the largest task-level gain over CaP-Agent0 on navigate-and-pick-up-radio, from <mark class="data">56% to 88%</mark>.</p>
+      <div class="zh">Fig.4 汇总了主评测结果，其中"Human"表示程序由人类专家手写。在 LIBERO-Pro 上，Aspire 在三个套件上全面超越所有基线：将 Pos 与 Task 两个扰动轴取平均后，相对各套件中最强的基线，Object 提升 77%、Goal 提升 41.5%、Spatial 提升 42.5%。π0.5 在部分位置扰动上强于 OpenVLA 与 π0，但仍远低于 Aspire，并且在任务表述改写（paraphrase）下大体崩溃。在 Robosuite 上，Aspire 在较简单的强接触任务上保持接近饱和的表现，并把双臂交接从 20% 提升到 92%。在 BEHAVIOR-1K 上，Aspire 在导航与任务两类成功率上都优于人类专家与 CaP-Agent0，其中相对 CaP-Agent0 最大的任务级增益出现在"导航拾取收音机"上，从 56% 提升到 88%。</div>
+      <div class="divider"></div>
+      <div class="quote">
+        <b>Fig.4 关键数值（转录自论文图）</b>
+        LIBERO-Pro 宏平均成功率：Object <b>Aspire 98</b> / CaP-Agent0 22 / π0.5 17 / Human 0；Goal <b>Aspire 95</b> / CaP-Agent0 38 / Human 1；Spatial <b>Aspire 81</b> / CaP-Agent0 51 / Human 14（Pos/Task 两轴，多数基线在 Task 轴为 0–20）。
+        Robosuite：Wipe/Restack/Stack <b>≈99–100</b>；2A-Handover <b>92</b>（对比基线 20）；Insert <b>9</b>（基线 0）。
+        BEHAVIOR-1K：Radio — Nav <b>99</b>/Task <b>88</b>（CaP-Agent0 80/56）；Soda can — Nav <b>92</b>/Task <b>88</b>（CaP-Agent0 84/72）。
+      </div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提供证据</span></dd>
+        <dt>② 逻辑角色</dt><dd>兑现 §1 缺口一的承诺：若细粒度轨迹是主瓶颈，则增益应最大出现在"需要归因"的场景（双臂、长时序、扰动）——数据确实如此（handover 20→92、radio 56→88），构成一次假设—检验式的收口。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>两处不利细节：Robosuite <b>Insert 仅 9%</b>（近失败），正文只字未提，属选择性报告；"Human" 一列在多数套件接近 0（Object Pos 0%），使"超越人类专家"的说法依赖于人类并未被给予同等调试工具这一前提。此外 LIBERO 的 Object 98% 接近饱和，头对头提升的绝对空间受限。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3.5 ZERO-SHOT ============ -->
+<section class="group" id="zeroshot">
+  <h2 class="sect">3.5. Zero-Shot Transfer to Unseen Tasks</h2>
+  <p class="sect-zh">这是"技能库确有复用价值"这一主张最直接的检验：库规模自变量 → 零样本成功率因变量，且禁止测试时调试与重试。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">Z1</span>We evaluate whether repair skills accumulated on LIBERO-90 transfer zero-shot to held-out LIBERO-Pro Long tasks. Aspire builds library snapshots from <mark class="method">N ∈ {0, 25, 50, 90} source tasks, where N = 0 is an empty-library setting and N = 90 is the full suite</mark>. <mark class="method">For each held-out task, Aspire generates one program and evaluates it across seeds with no additional debugging, retries, or task-specific library updates.</mark></p>
+      <div class="zh">我们评估在 LIBERO-90 上累积的修复技能能否零样本迁移到留出的 LIBERO-Pro Long 任务。Aspire 按 N ∈ {0, 25, 50, 90} 个源任务构建技能库快照，其中 N=0 为空库设置，N=90 为完整套件。对每个留出任务，Aspire 只生成一个程序，并在多种子上评测，期间不进行额外调试、不重试、也不做任务特定的库更新。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">设计检验</span></dd>
+        <dt>② 逻辑角色</dt><dd>把"经验复利"变成受控实验：N=0 即内置消融（无技能库），禁止重试则排除测试时计算混杂因素，可视为本文实验设计最严谨的一段。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>绝对水平仍低（最好 38%），说明"可复用知识"目前只带来相对优势而非可用性能；且零样本任务的类型分布（Long 版）与源套件同源，跨基准族的外推有效性未知。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">Z2</span>Figure 5(a) compares the full N = 90 skill library with prior baselines on the two LIBERO-Pro Long transfer axes: Aspire reaches <mark class="data">23% success on position perturbations and 38% on task perturbations</mark>, outperforming CaP-Agent0 and π0.5 on both axes. <mark class="arg">Figure 5(b) shows that success increases consistently as the size of the skill library grows, indicating that validated repairs from short-horizon tasks provide reusable robotic knowledge for longer-horizon compositions.</mark></p>
+      <div class="zh">Fig.5(a) 在 LIBERO-Pro Long 的两个迁移轴上与既有基线比较完整 N=90 技能库的结果：Aspire 在位置扰动上达到 23% 成功率，在任务扰动上达到 38%，两轴均优于 CaP-Agent0 与 π0.5。Fig.5(b) 显示成功率随技能库规模增长而稳定提升，这表明来自短时序任务的已验证修复，为更长时序的组合提供了可复用的机器人知识。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">证据 + 机理解释</span></dd>
+        <dt>② 逻辑角色</dt><dd>全文唯一直接支撑"performance scales with experience"（§1.6）的数据点，也是把 Aspire 与"一次性调试器"区分开的关键论据。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd><b>措辞与数据存在张力</b>：正文称"increases consistently"，但作者在 §5 明确承认零样本迁移中存在"non-monotonic trends"（非单调趋势），即 Fig.5(b) 并非严格单调。用"consistently"描述一个自己承认有波动的曲线，是本文最明显的一处过度概括（overclaim）。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3.6 REAL ROBOT ============ -->
+<section class="group" id="real">
+  <h2 class="sect">3.6. Real-Robot Skill Transfer Across Embodiments</h2>
+  <p class="sect-zh">最激进主张的落点。论证策略是先把主张缩小（"不是策略部署"），再给出成本与成功率两组证据。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">T1</span>We evaluate whether skills learned in simulation can reduce debugging effort on a real robot with a different embodiment. <mark class="concede">The transfer is not a direct policy deployment: the real robot uses its own perception, calibration, and control stack, and the coding agent must still adapt programs through real-world execution feedback.</mark> <mark class="arg">The question is whether retrieving simulation-discovered skills provides useful in-context guidance that reduces the amount of real-world debugging needed to reach a successful program.</mark></p>
+      <div class="zh">我们评估在仿真中学到的技能能否降低另一本体上真机调试的工作量。这里的迁移并不是直接的策略部署：真机使用其自身的感知、标定与控制栈，编程智能体仍必须借助真实世界的执行反馈来适配程序。真正要回答的问题是：检索仿真中发现的技能，是否能提供有用的上下文提示，从而减少达成一个成功程序所需的真机调试量。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">预先让步 / 重新设题</span></dd>
+        <dt>② 逻辑角色</dt><dd>防御性论证的典范：把无法支撑的强命题（"技能跨本体迁移有效"）改写为可支撑的弱命题（"技能降低调试成本"），先把读者的反驳点拆除。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>代价是结论分量下降：真正的 sim-to-real 能力主张被替换为"提示词有用"主张，弱化了"cross-embodiment"的新颖性——读者可合理质疑：这与"给模型多写几句提示"相比差异何在？</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">T2</span><mark class="arg">Table 1 shows that transferred skills consistently reduce debugging cost, while their effect on final success is task-dependent.</mark> <mark class="data">Bowl placement succeeds in both settings but uses fewer tokens with skill retrieval; soda-can lifting improves from 13/20 to 19/20 while reducing total tokens by nearly an order of magnitude; and drawer manipulation reaches 11/20 success with skill guidance, while the no-skill baseline exhausts a larger token budget without producing a successful evaluation program.</mark> These results indicate that <mark class="concept">selected failure-derived skills</mark> can guide real-robot program synthesis across embodiment and API changes rather than merely memorizing simulator-specific code.</p>
+      <div class="zh">Table 1 显示：迁移技能能一致地降低调试成本，但对最终成功率的影响则依任务而异。碗上盘在两种设置下都能成功，但使用技能检索时 token 更省；抬起易拉罐从 13/20 提升到 19/20，同时总 token 近乎下降一个数量级；抽屉操作在有技能提示时达到 11/20 成功率，而无技能基线耗尽了更大的 token 预算也未能产出可通过评测的程序。这些结果表明，经筛选的、源自故障的技能能够引导跨本体与跨 API 变化的真机程序合成，而不只是记住了仿真器特定的代码。</div>
+      <div class="divider"></div>
+      <div class="quote">
+        <b>Table 1（转录）</b>
+        <table class="res">
+          <tr><th>Task</th><th>Output tokens (M) ↓</th><th>Total tokens (M) ↓</th><th>Success ↑</th></tr>
+          <tr><td>Put bowl on plate</td><td>0.05 → 0.04</td><td>8.65 → 5.11</td><td>20/20 → 20/20</td></tr>
+          <tr><td>Lift soda can</td><td>0.18 → 0.03</td><td>61.94 → 6.58</td><td>13/20 → 19/20</td></tr>
+          <tr><td>Open/push drawer</td><td>1.33 → 0.36</td><td>334.9 → 81.67</td><td>0/20 → 11/20</td></tr>
+        </table>
+        （每项为"无技能 → 有技能"；每条件 20 次评测试验）
+      </div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">提供证据</span>+<span class="tag">限定结论</span></dd>
+        <dt>② 逻辑角色</dt><dd>把结论拆成两条强度不同的子主张：成本下降（三任务一致，强）与成功率提升（任务依赖，弱）。诚实的分级使主张不易被单点反例击破。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>抽屉 11/20 仍低于半数，且无技能基线为 0/20 只说明"预算内未成功"，不排除预算加倍即可成功；token 指标依赖所换基座模型的行为，跨模型不可比。n=20、单机器人、单实验员配置之下，"consistently reduce"这一概括的统计强度有限。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 3.7 ABLATION ============ -->
+<section class="group" id="ablation">
+  <h2 class="sect">3.7. Ablation Studies</h2>
+  <p class="sect-zh">消融段承担"因果归因"任务——把整体提升拆回各组件，是全文对"到底什么起了作用"这一质疑的正面回答。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">X1</span><mark class="method">We ablate two key components of Aspire on LIBERO-Pro: the robot execution engine, which exposes dense execution traces and validates task-level repairs, and evolutionary search, which explores additional repair candidates after robot-execution-engine debugging.</mark> Figure 6(a) and Figure 6(b) decompose success into a base system without either component, the gain from adding the robot execution engine, and the additional gain from evolutionary search. <mark class="arg">The robot execution engine provides the largest average improvement, raising macro-average success from 14% to 62%; evolutionary search further improves the remaining hard tasks, reaching 72% with both components.</mark></p>
+      <div class="zh">我们在 LIBERO-Pro 上消融 Aspire 的两个关键组件：机器人执行引擎（暴露稠密执行轨迹并验证任务级修复）与进化搜索（在执行引擎调试之后探索更多修复候选）。Fig.6(a)(b) 将成功率分解为"两者皆无的基系统"、"加入执行引擎的增益"与"进化搜索带来的额外增益"。执行引擎贡献了最大的平均提升，将宏平均成功率从 14% 提升到 62%；进化搜索进一步改善剩余的困难任务，两者齐备时达到 72%。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">归因证据</span></dd>
+        <dt>② 逻辑角色</dt><dd>14→62→72 的分解直接验证 §1.2 的"反馈粒度"论断（引擎贡献最大），也回填了 §2.3 让步段中"仅靠调试会局部坍缩"的次要性——两级增益排序与两级论证权重一致，这是本文结构与证据最契合之处。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>缺第三臂：未消融技能库（只消融两个组件）。由于"跨任务经验复利"正是标题级主张，此缺口意味着贡献最大的一项卖点缺少与 §3.4 同级别的消融证据。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">X2</span><mark class="method">Evolutionary search iterations. Figure 6(c) tracks performance on low-performing tasks as the evolutionary-search budget increases.</mark> <mark class="data">Success improves steadily in the first few rounds, suggesting that sampling multiple repair hypotheses quickly recovers alternatives missed by single-iteration debugging.</mark> The curve continues to increase more gradually afterward, <mark class="concede">indicating that additional rounds still help on residual hard cases, but with diminishing returns</mark>.</p>
+      <div class="zh">进化搜索迭代次数。Fig.6(c) 跟踪低表现任务在进化搜索预算增大时的表现。前几轮成功率稳定上升，说明采样多个修复假设能够快速找回单轮调试所遗漏的替代方案；此后曲线仍以更平缓的速度上升，表明额外的轮次对残余的困难任务仍有帮助，但收益递减。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">参数敏感性 + 让步</span></dd>
+        <dt>② 逻辑角色</dt><dd>为组件三的作用范围划界（主要救"低表现任务"，且收益递减），同时呼应 §5 第五条关于算力成本的局限——把弱点转成"预算—性能"的工程权衡。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>分析对象被限定为"low-performing tasks"（子集），因而在全集上的平均增益会明显小于该曲线所示；"diminishing returns"的坦承值得肯定，但也意味着 72% 这一数字对搜索预算敏感，而正文未报告默认预算取值的依据。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 4. RELATED WORK ============ -->
+<section class="group" id="related">
+  <h2 class="sect">4. Related Work</h2>
+  <p class="sect-zh">相关工作不是罗列，而是两次"划界"：对 agentic robot control 划出"持久性"，对 skill library 工作划出"知识来源"。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">W1</span><mark class="concept">Agentic robot control.</mark> Robot control has been studied through end-to-end vision-language-action policies and executable programs that compose perception, planning, and control APIs. Software-engineering agents provide a related write-execute-debug loop for code. <mark class="arg">Aspire builds on the executable-program paradigm, but focuses on persistent embodied improvement: the agent freely selects primitive-level multimodal traces, writes repairs, validates, and preserves successful experiences across tasks.</mark></p>
+      <div class="zh">智能体化的机器人控制。机器人控制沿两条路线被研究：端到端的视觉—语言—动作（VLA）策略，以及把感知、规划与控制 API 组合起来的执行程序。软件工程智能体则提供了类似的"写—跑—调"循环。Aspire 建立在可执行程序范式之上，但关注"具身的持久改进"：智能体自由选取原语级多模态轨迹、写出修复、加以验证，并把成功经验跨任务保留下来。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">第一次划界</span></dd>
+        <dt>② 逻辑角色</dt><dd>差异词是 <b>persistent</b>（持久），与 §1.3 缺口二呼应，将本文定位为"生命周期"贡献而非"单次求解"贡献。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>引用密度高但缺少定量对照（例如与同期 self-improving 机器人系统在统一基准上的比较），差异主要靠语义界定而非实验支撑。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">W2</span><mark class="concept">Self-improving agents and skill libraries.</mark> LLM agents have been improved through open-ended memory, skill libraries, and self-evolving skill repositories. Other systems use LLMs to generate rewards, curricula, environments, or search candidates. <mark class="arg">Unlike success-only memories, textual reflections, or reward functions for downstream policy training, Aspire stores validated repair knowledge extracted from attributed embodied failures.</mark> Its skills are open-ended in both content and admission: they emerge from the agent's own debugging experience, span heterogeneous categories (§2.2), and are reused as in-context guidance for future program repair. Evolutionary search (§2.3) further broadens the space of executable program repairs before reusable patterns are admitted to the library.</p>
+      <div class="zh">自我改进智能体与技能库。已有工作通过开放式记忆、技能库与自演化技能仓库来改进 LLM 智能体；也有系统用 LLM 生成奖励、课程、环境或搜索候选。与"只记录成功"的记忆、纯文本反思、或用于下游策略训练的奖励函数不同，Aspire 存储的是从"已归因的具身失败"中提炼出的已验证修复知识。其技能在内容与准入两方面都是开放的：它们源自智能体自身的调试经验，覆盖异构类别（§2.2），并作为上下文提示被后续程序修复复用。进化搜索（§2.3）则在可复用模式入库之前，进一步拓宽了可执行程序修复的空间。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">第二次划界</span>（最精确的一处定位）</dd>
+        <dt>② 逻辑角色</dt><dd>三个对比项各自击中一类替代方案：成功记忆（缺失败信息）、文本反思（缺验证）、奖励函数（缺直接可执行性）。以此论证"失败归因 + 验证"这一组合的不可替代性。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>对比是概念性的：论文没有实现"只存成功记忆"或"纯文本反思"的变体做消融。若把入库内容换成不附带验证的技能同样有效，则本段的核心差异论证就会松动——这是一个可以设计但未设计的对照。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 5. LIMITATIONS ============ -->
+<section class="group" id="limits">
+  <h2 class="sect">5. Limitations</h2>
+  <p class="sect-zh">五条局限实为五处预设反驳的主动承认。分析价值在于：其中至少两条直接触及本文核心主张的成立条件。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">L1</span><mark class="concede">Aspire has several important limitations. First, while selected simulation-discovered skills support autonomous real-robot debugging on a different embodiment, our system is not yet a fully autonomous real-world lifelong learner.</mark> Unlike simulation, where success checking and scene resets are cheap and programmatic, real-world deployment still requires robust success detection, safe reset, safety monitoring, and calibration maintenance. Future work should close this evaluation-and-reset loop to scale sim-to-real skill transfer across broader real-world task suites.</p>
+      <div class="zh">Aspire 存在若干重要局限。其一：尽管部分由仿真发现的技能能够支撑在另一本体上的自主真机调试，本系统仍不是一个完全自主的真实世界终身学习器。与仿真中廉价且可编程的成功判定与场景复位不同，真实部署仍需要稳健的成功检测、安全复位、安全监控与标定维护。未来工作应闭合"评测—复位"这一环，以便在更广的真机任务集上扩展仿真到真实的技能迁移。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1（局限一）</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步</span>——限定"continual learning"适用范围</dd>
+        <dt>② 逻辑角色</dt><dd>承认闭环只在仿真内成立；真机一侧的"自动跑循环"依赖人工复位，因此 §3.6 的自主性应理解为"调试过程自主"而非"生命周期自主"。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>措辞用 "not yet"（尚未）把缺陷转为路线图，是常见的自谦修辞。但这一让步与摘要"continual learning system"的普适语气并不完全对称——摘要未限定于仿真。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">L2</span><mark class="concede">Second, our method relies on a frozen frontier LLM (Claude Opus 4.6 with a 1M-token context window) to interpret multimodal traces, write program repairs, and propose evolutionary-search candidates; we have not verified that smaller or weaker LLMs can sustain the same debugging loop.</mark></p>
+      <div class="zh">其二，本方法依赖一个冻结的前沿大模型（Claude Opus 4.6，100 万 token 上下文窗口）来解读多模态轨迹、编写程序修复并提出进化搜索候选；我们尚未验证更小或更弱的模型能否支撑同样的调试循环。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 2（局限二）</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步</span>——承认混杂变量</dd>
+        <dt>② 逻辑角色</dt><dd>这是对全文内部效度威胁最诚实的一句：无法排除"提升主要来自基座模型而非框架"。任何读者若质疑框架贡献，作者已先一步承认。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>1M-token 上下文是方法的隐性前提，意味着系统在小上下文模型上可能根本不可实现；同时这也削弱了"技能库以紧凑提示替代长上下文"这一潜在卖点的必要性论证（库若真能压缩经验，则大上下文依赖应更低）。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">L3</span><mark class="concede">Third, Aspire writes programs using a predefined API of perception, planning, and control primitives. This API makes debugging tractable and safe, but also bounds the behaviors the agent can express: if a task requires sensing, control, or interaction capabilities outside the exposed primitives, the agent must either approximate them inefficiently or rely on humans to extend the API.</mark> Future systems should study how agents can safely propose, validate, and incorporate new robot primitives.</p>
+      <div class="zh">其三，Aspire 是在一套预定义的感知、规划与控制原语 API 之上编写程序的。这套 API 让调试变得可行且安全，但同时也限定了智能体能表达的行为边界：如果任务需要超出已暴露原语的感知、控制或交互能力，智能体只能低效地近似，或依赖人工扩展 API。未来系统应研究智能体如何安全地提出、验证并纳入新的机器人原语。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 3（局限三）</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步 / 反驳预防</span></dd>
+        <dt>② 逻辑角色</dt><dd>正面回应"open-ended 是否名副其实"这一最可能的审稿质疑：开放的是组合空间，封闭的是原子能力。承认封闭性，同时用"tractable and safe"说明这一取舍是有理由的交换。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>这一条与前文 "open-ended learning loop / not fixed pipelines" 的措辞冲突最强，实际上是对核心形容词的一次降级。若把它提前到 §1，全文的"开放式"叙事就要重写——说明论文中主张的强度分布并不一致。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">L4</span><mark class="concede">Fourth, the skill library currently prioritizes validated reusable repairs but does not fully solve long-term memory management. As the library grows, some entries may become stale, overly specific, redundant, or misleading for a new task, which can explain non-monotonic trends in zero-shot transfer.</mark> More robust retrieval, pruning, ranking, and re-validation mechanisms are needed to keep the library useful at scale.</p>
+      <div class="zh">其四，技能库当前优先纳入"经验证、可复用的修复"，但并未彻底解决长期记忆管理问题。随着库规模增大，部分条目可能变得过时、过于特定、冗余，或对新任务产生误导——这可以解释零样本迁移中出现的非单调趋势。要保持库在规模化后仍然有用，还需要更稳健的检索、剪枝、排序与再验证机制。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 4（局限四）</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步 + 解释反例</span></dd>
+        <dt>② 逻辑角色</dt><dd>承担"负面结果解释"的职责：主动为 Fig.5(b) 的非单调波动提供机理，把潜在的反例转化成一个已知、可解释、可改进的次要现象。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>关键处：这一承认反过来削弱了 §3.5 的 "success increases consistently"。同一篇论文中"一致提升"与"存在非单调趋势"并存，属可指认的内部矛盾；而"可以解释"仍是假说，并未通过条目审计或误导率测量加以验证。</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">L5</span><mark class="concede">Finally, the debug and evolutionary-search loop is compute-intensive, consuming many LLM calls and simulator or robot rollouts per task; scaling to very large task suites will require either cheaper LLM inference, more sample-efficient search, or stronger mechanisms for reusing prior repairs.</mark></p>
+      <div class="zh">最后，调试与进化搜索循环算力开销很高，每个任务需要大量 LLM 调用以及仿真器或真机 rollout；若要扩展到非常大的任务集，需要更廉价的 LLM 推理、更省样本的搜索，或更强的"复用既有修复"机制。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 5（局限五）</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">让步</span>——可行性/成本</dd>
+        <dt>② 逻辑角色</dt><dd>补齐"实际部署"维度的质疑：即使全部成功率成立，成本可能使该方法不经济。末句"更强的复用机制"又把话题送回技能库，暗示三组件之间的最终平衡点尚未找到。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>缺少具体数字（每任务 token / GPU-hour / 墙钟时间）。§3.6 表 1 显示单任务真机调试可达 334.9M token，这一量级若在主实验中同样普遍，则"77% 提升"的成本—收益应被明确讨论，而论文只给出定性表述。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 6. CONCLUSION ============ -->
+<section class="group" id="conclusion">
+  <h2 class="sect">6. Conclusion</h2>
+  <p class="sect-zh">结论段以"复述主张 + 分级证据"收束，并再次为迁移结论加上限定词。</p>
+
+  <div class="unit">
+    <div>
+      <p class="en"><span class="num">C1</span><mark class="arg">We present Aspire, a continual learning robotic system that autonomously writes and refines robot control programs while compounding experience into a reusable skill library.</mark> Aspire operates in an open-ended learning loop with three components: <mark class="method">a closed-loop robot execution engine that exposes fine-grained multimodal traces, a continually expanding skill library that distills validated fixes into transferable knowledge, and an evolutionary search procedure that explores diverse task sequences and control programs.</mark> Across diverse benchmarks, Aspire <mark class="data">substantially outperforms existing VLA and coding-agent baselines</mark>, demonstrates <mark class="data">strong zero-shot transfer to unseen long-horizon tasks</mark>, and provides <mark class="concede">initial evidence that the skills discovered in sim can transfer across embodiment to significantly reduce real-robot programming token cost</mark> despite different robot embodiments and APIs.</p>
+      <div class="zh">我们提出 Aspire：一个持续学习的机器人系统，它在自主编写并精化机器人控制程序的同时，把经验复利式地沉淀进可复用的技能库。Aspire 运行于开放式学习循环，包含三个组件：暴露细粒度多模态轨迹的闭环机器人执行引擎、把已验证修复蒸馏为可迁移知识的持续扩张技能库，以及探索多样任务序列与控制程序的进化式搜索流程。在多种基准上，Aspire 显著超越现有的 VLA 与编程智能体基线，展现了向未见长时序任务的强零样本迁移，并提供了初步证据：在不同机器人与不同 API 的条件下，仿真中发现的技能仍可跨本体迁移，从而显著降低真机编程的 token 成本。</div>
+      <div class="divider"></div>
+    </div>
+    <aside class="anno">
+      <h4>Paragraph 1</h4>
+      <dl>
+        <dt>① 段落功能</dt><dd><span class="tag">总结</span></dd>
+        <dt>② 逻辑角色</dt><dd>结论与摘要 A2–A4 几乎同构，形成"提出—论证—回收"的闭环；三档证据的强度排序（超越基线 → 零样本 → 初步证据）也与 §3.4/§3.5/§3.6 的可靠度一致。</dd>
+        <dt>③ 论证技巧 / 潜在弱点</dt><dd>值得注意的措辞收敛：结论把真机侧主张从"skills transfer across embodiments"改写为"reduce real-robot programming token cost"，与摘要的强语气相比更保守，也更贴近 Table 1 的实际内容——这是全文论证强度校准最准确的一句话。</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 4. BOTTOM OVERVIEW ============ -->
+<section class="overview" id="overview">
+  <h2>论证结构总览 · Argumentative Structure</h2>
+
+  <div class="chain">
+    <div class="node n-q"><b>Question 问题</b>机器人程序难以编写与调试：一次失败只给任务级信号，无法归因；且经验不跨任务累积（§1.2–1.3）。</div>
+    <div class="arrow">→</div>
+    <div class="node n-a"><b>Argument 主张</b>把"人如何调试机器人"编码为系统：细粒度轨迹 + 可复用技能库 + 多样化搜索 ⇒ 性能随经验扩展（§1.5–1.6）。</div>
+    <div class="arrow">→</div>
+    <div class="node n-e"><b>Evidence 证据</b>LIBERO-Pro +77/+41.5/+42.5；Robosuite 交接 20→92；BEHAVIOR 56→88；零样本 31% vs 4%；真机 token 61.9M→6.6M、0/20→11/20；消融 14→62→72。</div>
+    <div class="arrow">→</div>
+    <div class="node n-r"><b>Rebuttal 反驳处理</b>三处让步：非直接策略部署（§3.6）；收益递减（§3.7）；五条局限（§5：真机非终身学习、依赖前沿模型、API 封闭、记忆管理未解、算力开销）。</div>
+    <div class="arrow">→</div>
+    <div class="node n-c"><b>Conclusion 结论</b>机器人编程可由智能体自我改进地完成，且经验能以"技能"形式沉淀与迁移——在仿真中充分成立，在真机上仅为初步证据。</div>
+  </div>
+
+  <div class="claim">
+    <span>One-sentence central claim · 中心主张一句话版</span>
+    只要给编程智能体提供<b>逐原语的多模态执行轨迹</b>，并把<b>经过验证的修复</b>沉淀为可检索的技能库、再用<b>进化式搜索</b>扩大假设空间，机器人程序就能被自主写出、跨任务复用、并在性能上随经验持续增长——"调试经验复利"而非"更强的单任务求解器"才是机器人编程规模化的关键。
+  </div>
+
+  <div class="best-worst">
+    <div class="bw best">
+      <strong>Strongest point · 最强论证</strong>
+      <b>主张与证据的对应关系严密，且评测口径主动收紧。</b>引言的两个缺口逐字映射到两个组件与两组实验：缺口一（归因难）→ 执行引擎 → 消融 14%→62%；缺口二（经验不累积）→ 技能库 → 库规模 N∈{0,25,50,90} 的零样本扫描。更关键的是 §3.3 的协议设计：调试/评测种子严格不相交，且 Aspire <b>每个任务只生成一个程序</b>、禁止测试时重试，而基线可按种子重试——在对手更宽松的条件下取胜，使 +77 与 31% vs 4% 的差距难以用"算力不公平"解释。Fig.2 的 radio 案例还把"归因"这一抽象能力做成可核验的一次推理（感知成功 / 规划 PLANNING_ERROR / 目标落入 20cm 碰撞缓冲），机制可信度因此不依赖黑箱。
+    </div>
+    <div class="bw worst">
+      <strong>Weakest point · 最弱论证</strong>
+      <b>"Open-ended"（开放式）这一核心形容词与系统的实际构造相矛盾，且承重假设未经验证。</b>其一，§1.5 与摘要把"不再依赖固定人工流水线"作为卖点，但 §5 第三条承认程序只能在<b>预定义 API</b> 内书写，"不预设 taxonomy"（§2.2）也并未取消"何时可入库"由人工提示词规定的结构——开放性只存在于组合层，不存在于原子能力层。其二，"Program failures recur across tasks"（§2.2 第一句）与"经验能压缩成文本规则"是两项承重假设，前者缺少跨任务故障共现率统计，后者在真机上由 n=20、单平台、且<b>更换了基座模型</b>（Opus→GPT-5.5）的三任务对照支撑，证据量与主张幅度不成比例。其三，最直接的内部矛盾：§3.5 称成功率"increases consistently"，§5 又称库增长会带来"non-monotonic trends"与误导条目；技能库自身从未被消融（§3.7 只消融引擎与搜索），使得标题级的贡献缺少与 §3.4 同级的因果证据。
+    </div>
+  </div>
+</section>
+
+<footer>
+  ASPIRE: Agentic Skills Discovery for Robotics · arXiv:2607.00272v1 (2026-06-30) · NVIDIA GEAR / UMich SymbioticLab / UIUC / UC Berkeley AUTOLab / CMU LeCAR<br>
+  本页仅节选正文 §Abstract–§6 进行逐段论证分析；附录 A–E（技能样例、逐任务结果、提示词与管线细节）未纳入。
+</footer>
+
+</main>
+</body>
+</html>

@@ -42,3 +42,11 @@ https://zero-real.github.io/
 https://github.com/KevinXu02/aha-3d
 
 https://github.com/hku-sail/Real2Sim_GPT6_ASTRA/tree/main
+
+https://github.com/PranaLabs/newton.git
+
+https://github.com/Seeed-Projects/reBot-DevArm/tree/main/Rebot_Arm_description/Camera
+
+https://github.com/AgibotTech/genie_sim
+
+https://github.com/JohnYao93/flash-aloha

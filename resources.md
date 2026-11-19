@@ -50,3 +50,11 @@ https://github.com/Seeed-Projects/reBot-DevArm/tree/main/Rebot_Arm_description/C
 https://github.com/AgibotTech/genie_sim
 
 https://github.com/JohnYao93/flash-aloha
+
+https://github.com/Hebbian-Robotics/rua/tree/main
+
+https://github.com/FaBoAI/Tazuna/tree/main
+
+https://github.com/rokbenko/quackd.git
+
+https://huggingface.co/spaces/lerobot/robot-folding#hardware
